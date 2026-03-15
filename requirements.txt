@@ -1,0 +1,2 @@
+# No third-party runtime dependencies required.
+# The pali_translator package uses only the Python standard library.

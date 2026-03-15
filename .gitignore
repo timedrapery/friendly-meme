@@ -1,0 +1,23 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Lexicon cache
+.cache/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Editor files
+.idea/
+.vscode/
+*.swp
