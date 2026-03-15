@@ -35,7 +35,7 @@ The test suite is entirely offline — no network access or GitHub token needed.
 python -m unittest discover -s tests -v
 ```
 
-All 22 tests should pass.  Tests use a small synthetic lexicon injected via
+All tests should pass.  Tests use a small synthetic lexicon injected via
 `Lexicon.from_dict(...)` so there is no dependency on the upstream data source.
 
 ---
@@ -57,7 +57,7 @@ friendly-meme/
 │   ├── development-guide.md  (this file)
 │   └── usage.md            # CLI and API usage examples
 ├── .github/
-│   ├── workflows/ci.yml    # CI: test on Python 3.10–3.12
+│   ├── workflows/ci.yml    # CI: test on Python 3.10–3.13
 │   ├── ISSUE_TEMPLATE/     # Bug and feature request templates
 │   ├── pull_request_template.md
 │   └── dependabot.yml      # Automated dependency updates

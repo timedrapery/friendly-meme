@@ -1,2 +1,7 @@
-# No third-party runtime dependencies required.
-# The pali_translator package uses only the Python standard library.
+# pali-translator has no third-party runtime dependencies.
+#
+# To install the package for development:
+#
+#   pip install -e .
+#
+# All dependency metadata is in pyproject.toml.

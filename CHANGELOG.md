@@ -3,10 +3,15 @@
 All notable changes to **pali-translator** are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
 ## [Unreleased]
+
+---
+
+## [0.1.0] — 2026-03-15
 
 ### Added
 
@@ -21,8 +26,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     refresh modes.
 - `pyproject.toml` for standard installable packaging (`pip install .`
   registers a `pali-translator` console script).
-- 22 offline unit tests covering normalisation, diacritic stripping,
-  case-insensitive lookup, translation policy, punctuation handling, and
-  unknown-token reporting.
-- `CONTRIBUTING.md` with setup, testing, and contribution guidelines.
-- `CHANGELOG.md` (this file).
+- 23 offline unit tests covering normalisation, diacritic stripping,
+  case-insensitive lookup, translation policy, punctuation handling,
+  unknown-token reporting, and cross-module normalisation consistency.
+- `CONTRIBUTING.md`, `CHANGELOG.md`, `LICENSE` (MIT), `SECURITY.md`,
+  and `CODE_OF_CONDUCT.md`.
+- `docs/` directory with architecture, usage, and development-guide pages.
+- GitHub Actions CI workflow testing Python 3.10, 3.11, 3.12, and 3.13.
+- Issue templates, pull request template, and Dependabot configuration.
+
+---
+
+[Unreleased]: https://github.com/timedrapery/friendly-meme/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/timedrapery/friendly-meme/releases/tag/v0.1.0
