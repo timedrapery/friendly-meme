@@ -1,66 +1,145 @@
-# friendly-meme
+# pali-translator
+
+[![CI](https://github.com/timedrapery/friendly-meme/actions/workflows/ci.yml/badge.svg)](https://github.com/timedrapery/friendly-meme/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 A Pāli-to-contemporary-English translator powered by the
 [shiny-adventure](https://github.com/timedrapery/shiny-adventure) lexicon.
 
-The translator looks up each Pāli term in the Open Sangha Foundation (OSF)
+---
+
+## Overview
+
+`pali-translator` looks up each Pāli term in the Open Sangha Foundation (OSF)
 lexicon and substitutes the project's preferred contemporary English rendering,
 respecting the documented translation policy for each term.
 
+It works as both a **command-line tool** and an **importable Python library**.
+No third-party packages are required — the project uses only the Python
+standard library.
+
 ---
 
-## Quick start
+## Why this project exists
+
+Translating Pāli texts requires consistent, policy-governed word choices.
+The OSF lexicon (`shiny-adventure`) defines preferred and discouraged
+renderings for hundreds of terms, but applying those choices mechanically
+across a passage is tedious.  `pali-translator` automates that substitution
+while surfacing the editorial decisions behind each choice.
+
+---
+
+## Features
+
+- **Single-term lookup** — retrieve the preferred translation, alternatives,
+  definition, and entry type for any Pāli word
+- **Passage translation** — tokenise and translate a full Pāli passage in one
+  call, with per-token match metadata
+- **Policy-aware** — terms marked `untranslated_preferred` in the lexicon are
+  intentionally kept in Pāli
+- **Offline cache** — lexicon data is fetched from GitHub once and cached at
+  `~/.cache/pali_translator/lexicon.json`; subsequent runs work without
+  network access
+- **Typed API** — all public functions return dataclasses (`TermMatch`,
+  `TranslationResult`) rather than plain strings
+- **Zero runtime dependencies** — Python 3.10+ standard library only
+
+---
+
+## Repository structure
+
+```
+pali_translator/        Main package
+├── lexicon.py          GitHub fetch, caching, and term lookup
+├── translator.py       Tokenisation and translation logic
+└── cli.py              Command-line interface
+
+tests/                  Offline unit tests (synthetic lexicon, no network)
+docs/                   Extended documentation
+  ├── architecture.md   System design and module breakdown
+  ├── usage.md          Full CLI and library API reference
+  └── development-guide.md  Contributor setup and workflow
+```
+
+---
+
+## Getting started
 
 ```bash
-# look up a single Pāli term
+git clone https://github.com/timedrapery/friendly-meme.git
+cd friendly-meme
+pip install -e .
+```
+
+No additional packages needed.
+
+---
+
+## Usage
+
+```bash
+# Look up a single Pāli term
 python -m pali_translator dukkha
 
-# translate a multi-word Pāli passage
+# Translate a multi-word passage
 python -m pali_translator --translate "dukkha samudayo nirodho maggo"
 
-# verbose output includes definitions and alternative translations
-python -m pali_translator --verbose dukkha
+# Verbose output — definitions and alternatives
+python -m pali_translator --verbose --translate "dukkha nibbana"
 
-# force a fresh download of the lexicon cache
+# Force a fresh download of the lexicon cache
 python -m pali_translator --refresh dukkha
 ```
 
-The lexicon data is fetched from GitHub on first run and cached at
-`~/.cache/pali_translator/lexicon.json`. Subsequent runs load from the
-local cache and work offline.
+### Library API
 
----
+```python
+from pali_translator import Lexicon, lookup_term, translate_text
 
-## How it works
-
-1. **Lexicon** (`pali_translator/lexicon.py`) — downloads all `terms/major/`
-   and `terms/minor/` JSON files from the shiny-adventure repository and
-   builds an in-memory lookup index keyed by the ASCII-normalised term.
-
-2. **Translator** (`pali_translator/translator.py`) — tokenises a Pāli
-   passage, looks up each token, and substitutes the `preferred_translation`
-   field value. Terms marked `untranslated_preferred: true` are left in
-   Pāli as per the lexicon policy.
-
-3. **CLI** (`pali_translator/cli.py`) — thin command-line wrapper around the
-   translator, supporting single-term lookup and full-passage translation.
-
----
-
-## Running tests
-
-```bash
-python -m unittest discover -s tests
+lexicon = Lexicon()                           # fetches and caches on first run
+result  = translate_text("dukkha nibbana", lexicon)
+print(result.translated)                      # "dissatisfaction unbinding"
+print(result.unknown_tokens)                  # tokens not found in the lexicon
 ```
 
-No external dependencies are required; all tests use a small synthetic
-lexicon and run entirely offline.
+See [`docs/usage.md`](docs/usage.md) for the full API reference.
+
+---
+
+## Development
+
+```bash
+# Run the test suite (offline — no network or token required)
+python -m unittest discover -s tests -v
+```
+
+See [`docs/development-guide.md`](docs/development-guide.md) for the full
+contributor workflow, including setup, code standards, and release steps.
+
+---
+
+## Contributing
+
+Contributions are welcome.  Please read [`CONTRIBUTING.md`](CONTRIBUTING.md)
+and open an issue before starting significant work.
+
+Term data lives in the separate
+[timedrapery/shiny-adventure](https://github.com/timedrapery/shiny-adventure)
+repository.  To add or revise a term, contribute there.
 
 ---
 
 ## Data source
 
-Term data is drawn from the
-[timedrapery/shiny-adventure](https://github.com/timedrapery/shiny-adventure)
-repository, which is a structured Pāli-to-English translation lexicon
-maintained by the Open Sangha Foundation.
+Term data is drawn from
+[timedrapery/shiny-adventure](https://github.com/timedrapery/shiny-adventure),
+a structured Pāli-to-English translation lexicon maintained by the Open Sangha
+Foundation.
+
+---
+
+## License
+
+[MIT](LICENSE)

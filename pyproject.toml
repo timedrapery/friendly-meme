@@ -7,18 +7,42 @@ name = "pali-translator"
 version = "0.1.0"
 description = "Pāli-to-contemporary-English translator backed by the shiny-adventure lexicon"
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
 # No third-party runtime dependencies — stdlib only.
 dependencies = []
+keywords = ["pali", "buddhism", "translation", "linguistics", "natural-language-processing"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Religion",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Text Processing :: Linguistic",
+  "Topic :: Utilities",
+]
+
+[project.optional-dependencies]
+# No test or dev dependencies beyond the standard library are currently needed.
+# This section is reserved for future additions (e.g. linters, type checkers).
+dev = []
 
 [project.scripts]
 # Installs a `pali-translator` command when the package is pip-installed.
 pali-translator = "pali_translator.cli:main"
 
 [project.urls]
-"Homepage"   = "https://github.com/timedrapery/friendly-meme"
-"Data source" = "https://github.com/timedrapery/shiny-adventure"
+"Homepage"    = "https://github.com/timedrapery/friendly-meme"
+"Bug Tracker" = "https://github.com/timedrapery/friendly-meme/issues"
+"Data Source" = "https://github.com/timedrapery/shiny-adventure"
 
 [tool.setuptools.packages.find]
 # Auto-discover the pali_translator package; exclude tests from the wheel.

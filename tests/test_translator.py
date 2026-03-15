@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from pali_translator.lexicon import Lexicon, _normalize
-from pali_translator.translator import lookup_term, translate_text
+from pali_translator.lexicon import Lexicon, _normalize as lex_normalize
+from pali_translator.translator import lookup_term, translate_text, _normalize as tr_normalize
 
 
 # ---------------------------------------------------------------------------
@@ -65,19 +65,19 @@ LEXICON = Lexicon.from_dict(_SAMPLE_RECORDS)
 
 class TestNormalize(unittest.TestCase):
     def test_ascii_term(self):
-        self.assertEqual(_normalize("dukkha"), "dukkha")
+        self.assertEqual(lex_normalize("dukkha"), "dukkha")
 
     def test_diacritics_stripped(self):
-        self.assertEqual(_normalize("nibbāna"), "nibbana")
+        self.assertEqual(lex_normalize("nibbāna"), "nibbana")
 
     def test_case_insensitive(self):
-        self.assertEqual(_normalize("Dukkha"), "dukkha")
+        self.assertEqual(lex_normalize("Dukkha"), "dukkha")
 
     def test_spaces_converted(self):
-        self.assertEqual(_normalize("noble truth"), "noble_truth")
+        self.assertEqual(lex_normalize("noble truth"), "noble_truth")
 
     def test_hyphens_converted(self):
-        self.assertEqual(_normalize("non-ill-will"), "non_ill_will")
+        self.assertEqual(lex_normalize("non-ill-will"), "non_ill_will")
 
 
 class TestLexiconLookup(unittest.TestCase):
@@ -174,6 +174,31 @@ class TestTranslateText(unittest.TestCase):
         self.assertEqual(result.translated, "")
         self.assertEqual(result.matches, [])
         self.assertEqual(result.unknown_tokens, [])
+
+
+class TestNormalizeConsistency(unittest.TestCase):
+    """Verify that lexicon._normalize and translator._normalize stay in sync.
+
+    Both modules intentionally duplicate the normalisation logic so they can
+    be imported independently.  This test catches any future drift between the
+    two copies.
+    """
+
+    _FIXTURES = [
+        "dukkha",
+        "Dukkha",
+        "nibbāna",
+        "non-ill-will",
+        "noble truth",
+        "Sīla",
+        "ĀNĀPĀNASATI",
+        "",
+    ]
+
+    def test_outputs_match(self):
+        for term in self._FIXTURES:
+            with self.subTest(term=term):
+                self.assertEqual(lex_normalize(term), tr_normalize(term))
 
 
 if __name__ == "__main__":
