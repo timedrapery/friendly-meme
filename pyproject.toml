@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "pali-translator"
+version = "0.1.0"
+description = "Pāli-to-contemporary-English translator backed by the shiny-adventure lexicon"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+# No third-party runtime dependencies — stdlib only.
+dependencies = []
+
+[project.scripts]
+# Installs a `pali-translator` command when the package is pip-installed.
+pali-translator = "pali_translator.cli:main"
+
+[project.urls]
+"Homepage"   = "https://github.com/timedrapery/friendly-meme"
+"Data source" = "https://github.com/timedrapery/shiny-adventure"
+
+[tool.setuptools.packages.find]
+# Auto-discover the pali_translator package; exclude tests from the wheel.
+where   = ["."]
+exclude = ["tests*"]
