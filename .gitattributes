@@ -1,0 +1,20 @@
+# Normalise line endings to LF on checkout for all text files.
+* text=auto eol=lf
+
+# Python source files — always LF, no BOM
+*.py text diff=python
+
+# Markdown — LF, text diff
+*.md text diff=markdown
+
+# Data and config formats
+*.json text
+*.toml text
+*.yml  text
+*.yaml text
+
+# Binary files — never mangle
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.ico  binary
