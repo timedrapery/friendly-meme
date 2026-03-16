@@ -4,14 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pali-translator"
-version = "0.1.0"
-description = "Lexicon-governed Pāli translation package and CLI backed by the shiny-adventure term policy"
+version = "0.2.0"
+description = "Lexicon-governed Pāli translator: desktop GUI, CLI, and Python library backed by the shiny-adventure term policy"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-# No third-party runtime dependencies — stdlib only.
+# No third-party runtime dependencies — stdlib only (Tkinter is part of the
+# standard library on most platforms; see docs/usage.md for platform notes).
 dependencies = []
-keywords = ["pali", "translation", "lexicon", "cli", "philology"]
+keywords = ["pali", "translation", "lexicon", "cli", "gui", "philology", "buddhism"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -36,8 +37,10 @@ classifiers = [
 dev = []
 
 [project.scripts]
-# Installs a `pali-translator` command when the package is pip-installed.
+# CLI entry point — unchanged from 0.1.x.
 pali-translator = "pali_translator.cli:main"
+# GUI entry point — launches the Tkinter desktop workbench.
+pali-translator-gui = "pali_translator.gui.__main__:main"
 
 [project.urls]
 "Homepage"    = "https://github.com/timedrapery/friendly-meme"

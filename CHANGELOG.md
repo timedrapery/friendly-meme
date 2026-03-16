@@ -9,6 +9,51 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added — Desktop GUI workbench (`pali_translator/gui/`)
+
+- `pali_translator.gui.app` — main Tkinter window with a translator workbench
+  layout: resizable left/right panes, source input, translation output,
+  token analysis table, term inspector, status bar, and menu bar.
+- `pali_translator.gui.controller` — headless application controller with no
+  Tk imports; wraps lexicon loading (designed for background threads),
+  translation, single-term lookup, and session tracking.  Produces
+  `TokenRow` objects for every source token, including unmatched ones.
+- `pali_translator.gui.widgets` — reusable Tk widget components: `TokenTable`
+  (ttk.Treeview with 8 columns and colour-tagged rows), `TermInspectorFrame`
+  (styled text panel for term detail), and `StatusBar`.
+- `pali_translator.gui.export` — `export_json` and `export_plain_text`
+  serialise a `TranslationSession` to file; no Tk dependency.
+- `pali_translator.gui.__main__` — `python -m pali_translator.gui` entry point
+  with a clear error message when Tkinter is not available.
+- `pali-translator-gui` console script entry in `pyproject.toml`.
+
+### Added — Export / reporting
+
+- `TranslationSession` dataclass captures source text, `TranslationResult`,
+  per-token `TokenRow` list, `LexiconStatus`, and ISO timestamp.
+- Plain-text export: source, translation, token analysis, unknown tokens,
+  lexicon source and cache path.
+- JSON export: full structured record including all match metadata and counts.
+
+### Added — Tests
+
+- `tests/test_gui_controller.py` — 25 tests for controller init, translate,
+  token row fields, and lookup; no Tk or network required.
+- `tests/test_export.py` — 30 tests covering JSON and plain-text export
+  structure, Unicode round-tripping, and edge cases.
+
+### Changed
+
+- `pyproject.toml` version bumped to `0.2.0`.
+- README expanded: desktop GUI overview, launch instructions, Tkinter platform
+  note, updated features list and repo structure diagram.
+- `docs/architecture.md` rewritten to document the GUI layer, the
+  core-vs-GUI boundary, and the updated data flow.
+
+---
+
+## [0.1.x] — 2026-03-16 (pre-GUI sprint)
+
 ### Added
 
 - `pali-translator --json` for machine-readable single-term and passage output.
@@ -41,7 +86,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [0.1.0] — 2026-03-15
+## [0.1.x] — 2026-03-16 (pre-GUI sprint)
 
 ### Added
 

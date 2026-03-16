@@ -4,7 +4,8 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A lexicon-governed Pāli translation package and CLI built around the
+A lexicon-governed Pāli translator: **desktop GUI workbench**, command-line
+tool, and Python library — built around the
 [shiny-adventure](https://github.com/timedrapery/shiny-adventure) term policy.
 
 ---
@@ -14,14 +15,18 @@ A lexicon-governed Pāli translation package and CLI built around the
 `pali-translator` is not a generic machine translation system. It consumes
 structured lexical policy from
 [timedrapery/shiny-adventure](https://github.com/timedrapery/shiny-adventure),
-applies those rules deterministically, and exposes the result through a small
-Python API and a straightforward command-line interface.
+applies those rules deterministically, and exposes the result through:
+
+- a **desktop GUI workbench** for non-technical users and editorial review
+- a **command-line interface** for scripting and automation
+- a **Python library** for programmatic integration
 
 It is designed for local, inspectable workflows:
 
 - explicit lexicon loading
-- predictable cache behavior
+- predictable cache behaviour
 - readable structured results
+- token-by-token editorial transparency
 - no runtime dependencies beyond the Python standard library
 
 ---
@@ -33,20 +38,49 @@ the preferred contemporary-English rendering attached to that term. Terms marked
 as `untranslated_preferred` remain in Pāli by policy, and unknown tokens remain
 visible in the output rather than being guessed.
 
-That makes the tool useful for:
+The desktop GUI makes these same mechanics accessible to non-technical users,
+with a token-by-token analysis table, term inspector, and one-click export.
 
-- consistent local translation passes
-- lexicon inspection and spot checks
-- scripting around known term policy
-- building other tooling on top of a small stable API
+---
 
-It does not replace editorial judgment, and it does not infer translations that
-are not present in the lexicon policy.
+## Desktop GUI
+
+The Tkinter workbench provides:
+
+- **Source input** — enter any Pāli passage
+- **Translate button** — translates the passage token by token
+- **Token analysis table** — every token with its match status, preferred
+  translation, entry type, policy flag, definition, and alternatives
+- **Term inspector** — click any table row (or search directly) to view a
+  term's full lexicon record including definition and OSF policy notes
+- **Translation output** — rendered passage with copy-to-clipboard
+- **Export** — plain-text or JSON session reports including metadata
+- **Refresh lexicon** — force a fresh download from GitHub
+- **Status bar** — shows lexicon source (cache / network), entry count, and
+  per-action feedback
+- **About / Lexicon & Cache Info** — shows the cache path and load details
+
+#### Launch the GUI
+
+```bash
+# After pip install -e .
+pali-translator-gui
+
+# Without installing (module entry point)
+python -m pali_translator.gui
+```
+
+> **Tkinter note:** Tkinter comes bundled with the standard CPython installers
+> for Windows and macOS. On headless Linux servers it may need to be installed
+> separately (`sudo apt-get install python3-tk`). The CLI and library work fine
+> without a display.
 
 ---
 
 ## Features
 
+- **Desktop GUI** — Tkinter workbench for non-technical users and editorial
+  review sessions
 - **Single-term lookup** — retrieve the preferred translation, alternatives,
   definition, and entry type for any Pāli word
 - **Passage translation** — tokenise and translate a full Pāli passage in one
@@ -56,6 +90,7 @@ are not present in the lexicon policy.
 - **Offline cache** — lexicon data is fetched from GitHub once and cached at
   `~/.cache/pali_translator/lexicon.json`; subsequent runs work without
   network access
+- **Export** — plain-text and JSON session reports with full token analysis
 - **Scriptable CLI** — optional JSON output and predictable exit codes for
   shell automation
 - **Explicit cache control** — override cache location with `--cache-path` or
@@ -74,13 +109,19 @@ are not present in the lexicon policy.
 pali_translator/        Main package
 ├── lexicon.py          GitHub fetch, caching, and term lookup
 ├── translator.py       Tokenisation and translation logic
-└── cli.py              Command-line interface
+├── cli.py              Command-line interface
+└── gui/                Desktop GUI workbench (Tkinter)
+    ├── app.py          Main window and event wiring
+    ├── controller.py   Application state (no Tk deps)
+    ├── widgets.py      Reusable Tk widget components
+    ├── export.py       Plain-text and JSON report generation
+    └── __main__.py     python -m pali_translator.gui entry point
 
-tests/                  Offline unit tests (synthetic lexicon, no network)
+tests/                  Offline unit tests (no network, no display needed)
 docs/                   Extended documentation
-  ├── architecture.md   System design and module breakdown
-  ├── usage.md          Full CLI and library API reference
-  └── development-guide.md  Contributor setup and workflow
+    ├── architecture.md   System design and module breakdown
+    ├── usage.md          Full CLI and library API reference
+    └── development-guide.md  Contributor setup and workflow
 ```
 
 ---
@@ -93,12 +134,30 @@ cd friendly-meme
 pip install -e .
 ```
 
-This installs the `pali-translator` command. `python -m pali_translator ...`
-remains available as an alternative entry point.
+This installs two commands:
+
+- `pali-translator` — the command-line interface
+- `pali-translator-gui` — the desktop GUI workbench
+
+`python -m pali_translator ...` and `python -m pali_translator.gui` remain
+available as alternative entry points.
 
 ---
 
 ## Quickstart
+
+### Desktop GUI
+
+```bash
+pali-translator-gui
+# or: python -m pali_translator.gui
+```
+
+On first launch the lexicon is automatically downloaded and cached. Subsequent
+launches load from the cache and start in under a second.
+Offline use works as long as the cache exists.
+
+### CLI
 
 ```bash
 # Look up a single Pāli term

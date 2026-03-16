@@ -1,5 +1,67 @@
 # Usage guide
 
+## Desktop GUI
+
+The Tkinter workbench is the primary interface for non-technical users.
+
+### Launching
+
+```bash
+# Console script (after pip install -e .)
+pali-translator-gui
+
+# Module entry point
+python -m pali_translator.gui
+```
+
+### First run
+
+On first launch the app downloads and caches the full shiny-adventure lexicon.
+The status bar shows progress.  Subsequent launches load from the local cache
+and start immediately.  If you are offline and the cache exists, the app works
+without any network access.
+
+### Translate a passage
+
+1. Type or paste a Pāli passage into the **Source (Pāli)** box on the left.
+2. Click **Translate** (or press Ctrl+Return).
+3. The translated passage appears in the **Translation** panel on the right.
+4. The **Token Analysis** table shows every token with:
+   - original token and normalised form
+   - `matched` / `UNKNOWN` status (colour-coded)
+   - preferred translation per OSF policy
+   - entry type (`major` / `minor`)
+   - whether the term is kept in Pāli by policy
+   - definition excerpt and alternatives
+
+Unknown tokens appear in red. They are passed through unchanged in the
+translation output.
+
+### Inspect a term
+
+- Click any row in the Token Analysis table.  The **Term Inspector** panel
+  updates immediately with the full lexicon record.
+- Alternatively, type a term into the **Term Lookup** field and click
+  **Lookup** (or press Return).
+
+### Copy and export
+
+- **Copy Output** button (or Edit > Copy Output / Ctrl+Shift+C) copies the
+  translated passage to the clipboard.
+- **File > Export as Plain Text…** saves a full session report (source,
+  translation, token table, unknowns, lexicon metadata) as `.txt`.
+- **File > Export as JSON…** saves a machine-readable record with all match
+  data as `.json`.
+
+### Cache and lexicon management
+
+- **Refresh Lexicon** button re-downloads the lexicon from GitHub and updates
+  the cache.  Use this when a new shiny-adventure release is available.
+- **Help > Lexicon & Cache Info** shows the current cache path, entry count,
+  and whether the lexicon was loaded from cache or the network.
+
+---
+
 ## Installation
 
 ```bash
@@ -12,8 +74,13 @@ pip install -e .
 # pip install pali-translator
 ```
 
-The editable install registers the `pali-translator` console command. You can
-also continue to use `python -m pali_translator ...` if that fits your workflow.
+The editable install registers two console commands:
+
+- `pali-translator` — the CLI
+- `pali-translator-gui` — the desktop GUI workbench
+
+You can also use `python -m pali_translator ...` and
+`python -m pali_translator.gui` as alternative entry points.
 
 ---
 
