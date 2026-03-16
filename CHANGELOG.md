@@ -9,6 +9,102 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [0.3.0] — Sprint 3+4 — Scholarly workbench
+
+### Added — History and session management
+
+- `pali_translator.gui.history` — `TranslationHistory` class maintains an
+  in-memory log of `TranslationSession` objects with `add()`, `clear()`,
+  `__len__`, and `__iter__` for ordered retrieval.
+
+### Added — Concordance
+
+- `pali_translator.gui.concordance` — `build_concordance(sessions)` aggregates
+  all translated sessions into a `ConcordanceEntry` per normalised token,
+  recording occurrence count, all source contexts, and translation set.
+  `Concordance.most_common(n)` returns the top-n entries by frequency.
+
+### Added — Advanced filtering
+
+- `pali_translator.gui.filter` — `FilterCriteria` dataclass and
+  `apply_filter(rows, criteria)` support filtering token rows by match status,
+  policy flag, token text, and translation text.
+
+### Added — Settings persistence
+
+- `pali_translator.gui.settings` — `Settings` dataclass with `save()` and
+  `load()` backed by a JSON file at
+  `~/.config/pali_translator/settings.json`.  Persists cache path override,
+  window geometry, font size, and auto-refresh preference across sessions.
+
+### Added — Multi-word phrase matching
+
+- `pali_translator.phrases` — `PhraseIndex` built from any `Lexicon` instance.
+  `scan(tokens)` identifies all non-overlapping multi-word matches; phrases are
+  matched greedily from left to right.
+- `controller.py` `_build_token_rows()` extended to mark phrase boundaries
+  (`is_phrase_start`, `is_phrase_end`) and attach the phrase preferred
+  translation to the leading token.
+- `lexicon.py` gains an `items()` method exposing the underlying index for
+  phrase scanning.
+
+### Added — Interlinear view
+
+- `pali_translator.gui.interlinear` — `InterlinearRow` and `build_interlinear`
+  produce a row-per-token gloss table with original token, normalised form,
+  preferred translation, phrase span/rendering data, and a `gloss` property.
+
+### Added — Session notes
+
+- `pali_translator.gui.notes` — `SessionNotes` dataclass supports a
+  per-session note, per-token notes keyed by normalised form, and per-phrase
+  notes keyed by `span_key(tokens)`.  `to_dict()` / `from_dict()` enable JSON
+  round-tripping; notes are included in `export_json` output.
+
+### Added — Session comparison
+
+- `pali_translator.gui.compare` — `compare_sessions(a, b)` returns a
+  `ComparisonSummary` with `added_tokens`, `removed_tokens`,
+  `changed_tokens`, `newly_matched`, `newly_unknown`, and a
+  `.has_differences` convenience property.
+
+### Added — Markdown export
+
+- `pali_translator.gui.export` extended with `export_markdown(session)`,
+  serialising the session as GitHub-flavoured Markdown: H1 header, blockquote
+  sections for source and translation, full token analysis table,
+  unknown-tokens list, phrase matches (when present), notes (when present),
+  and ISO timestamp footer.
+- GUI File menu gains an **Export Markdown** entry.
+
+### Added — Tests (225 total, up from 89)
+
+- `tests/test_settings.py` — 14 tests for `Settings` defaults and save/load.
+- `tests/test_history.py` — 12 tests for `TranslationHistory` CRUD.
+- `tests/test_concordance.py` — 13 tests for aggregation and frequency ordering.
+- `tests/test_filter.py` — 16 tests for `FilterCriteria` combinations.
+- `tests/test_phrases.py` — 16 tests for `PhraseIndex` scan and boundaries.
+- `tests/test_interlinear.py` — 18 tests for gloss construction and phrase spans.
+- `tests/test_notes.py` — 28 tests for `SessionNotes` CRUD and serialisation.
+- `tests/test_compare.py` — 30 tests for `compare_sessions` diffs and timestamps.
+- `tests/test_export.py` extended: phrase/notes keys in JSON export, Markdown
+  export structure (14 new tests).
+
+### Changed
+
+- `pyproject.toml` version bumped to `0.3.0`.
+- `controller.py` `TokenRow` extended with `is_phrase_start`, `is_phrase_end`,
+  and `phrase_translation` fields.
+- `export.py` `export_json` now emits `phrase_matches` and `notes` keys when
+  present.
+- README, `docs/architecture.md`, and `docs/usage.md` updated for v0.3.0.
+
+---
+
+## [0.2.0] — Desktop GUI workbench
+
 ### Added — Desktop GUI workbench (`pali_translator/gui/`)
 
 - `pali_translator.gui.app` — main Tkinter window with a translator workbench

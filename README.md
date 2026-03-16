@@ -54,7 +54,14 @@ The Tkinter workbench provides:
 - **Term inspector** — click any table row (or search directly) to view a
   term's full lexicon record including definition and OSF policy notes
 - **Translation output** — rendered passage with copy-to-clipboard
-- **Export** — plain-text or JSON session reports including metadata
+- **History** — browse, reload, or clear all past translation sessions
+- **Concordance** — view a frequency-ordered index of every token
+- **Filter** — narrow the token table by match status, policy, or text
+- **Phrase matching** — compound phrases matched and highlighted as a unit
+- **Interlinear view** — per-token gloss table for detailed analysis
+- **Notes** — attach annotations to sessions, tokens, and phrases
+- **Compare** — diff two sessions to see added, removed, or changed tokens
+- **Export** — plain-text, JSON (with phrases and notes), and Markdown reports
 - **Refresh lexicon** — force a fresh download from GitHub
 - **Status bar** — shows lexicon source (cache / network), entry count, and
   per-action feedback
@@ -90,7 +97,15 @@ python -m pali_translator.gui
 - **Offline cache** — lexicon data is fetched from GitHub once and cached at
   `~/.cache/pali_translator/lexicon.json`; subsequent runs work without
   network access
-- **Export** — plain-text and JSON session reports with full token analysis
+- **History** — in-session log of all translated passages; re-load any past session
+- **Concordance** — frequency-ordered index of every token across all sessions
+- **Filtering** — filter the token analysis table by match status, policy flag, or text
+- **Multi-word phrase matching** — compound Pāli phrases matched and tagged as a unit
+- **Interlinear view** — row-per-token gloss table with phrase span data
+- **Session notes** — attach free-text annotations to sessions, tokens, or phrases
+- **Session comparison** — diff two translation sessions to see what changed
+- **Settings persistence** — window geometry, font size, and cache path saved across runs
+- **Export** — plain-text, JSON (with phrases and notes), and Markdown session reports
 - **Scriptable CLI** — optional JSON output and predictable exit codes for
   shell automation
 - **Explicit cache control** — override cache location with `--cache-path` or
@@ -109,12 +124,20 @@ python -m pali_translator.gui
 pali_translator/        Main package
 ├── lexicon.py          GitHub fetch, caching, and term lookup
 ├── translator.py       Tokenisation and translation logic
+├── phrases.py          Multi-word phrase index and scanning
 ├── cli.py              Command-line interface
 └── gui/                Desktop GUI workbench (Tkinter)
     ├── app.py          Main window and event wiring
     ├── controller.py   Application state (no Tk deps)
     ├── widgets.py      Reusable Tk widget components
-    ├── export.py       Plain-text and JSON report generation
+    ├── export.py       Plain-text, JSON, and Markdown report generation
+    ├── history.py      In-session translation history log
+    ├── concordance.py  Token concordance builder
+    ├── filter.py       Token row filtering
+    ├── settings.py     Persistent user settings (JSON)
+    ├── interlinear.py  Interlinear gloss table builder
+    ├── notes.py        Session / token / phrase annotation store
+    ├── compare.py      Session diff and comparison summary
     └── __main__.py     python -m pali_translator.gui entry point
 
 tests/                  Offline unit tests (no network, no display needed)

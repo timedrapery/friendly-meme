@@ -262,6 +262,10 @@ class Lexicon:
         """Support ``term in lexicon`` membership tests."""
         return _normalize(term) in self._index
 
+    def items(self):
+        """Return a view of (key, record) pairs from the internal index."""
+        return self._index.items()
+
     @property
     def cache_path(self) -> Path:
         """Return the cache file path used by this lexicon instance."""

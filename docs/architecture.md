@@ -12,13 +12,21 @@ pali_translator/
 ├── cli.py           # Argument parsing and formatted output
 ├── lexicon.py       # Data fetching, caching, and lookup
 ├── translator.py    # Tokenisation and translation logic
+├── phrases.py       # Multi-word phrase index and greedy scan
 └── gui/             # Desktop GUI layer (Tkinter)
     ├── __init__.py
     ├── __main__.py  # python -m pali_translator.gui entry point
     ├── app.py       # Tk root window, event wiring, layout
     ├── controller.py# Application state — no Tk imports
     ├── widgets.py   # Reusable Tk widget components
-    └── export.py    # Plain-text and JSON report generation
+    ├── export.py    # Plain-text, JSON, and Markdown report generation
+    ├── history.py   # In-session translation history log
+    ├── concordance.py# Token concordance builder
+    ├── filter.py    # Token row filtering utilities
+    ├── settings.py  # Persistent user settings (JSON)
+    ├── interlinear.py# Interlinear gloss row builder
+    ├── notes.py     # Session / token / phrase annotation store
+    └── compare.py   # Session diff and ComparisonSummary
 ```
 
 ---

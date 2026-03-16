@@ -310,3 +310,107 @@ or delete the cache file to rebuild it.
 - Punctuation-only tokens are preserved as-is and are not reported as unknown.
 - Terms marked `untranslated_preferred` remain in Pāli and still appear in
   `matches`, so callers can tell that the token was recognized intentionally.
+
+---
+
+## History
+
+The **History** menu lists every translation performed in the current session.
+Click any entry to reload that session's source text and results. Use
+**History > Clear History** to reset the log.
+
+---
+
+## Concordance
+
+**Tools > Concordance** opens a frequency-ordered index of every token seen
+across all sessions in the current run. Each entry shows occurrence count,
+source contexts, and all recorded translations.
+
+---
+
+## Filtering the token table
+
+**Filter** controls (available in the Token Analysis pane or via the Filter
+menu) narrow the table by:
+
+- **Match status** — matched only, unknown only, or all rows
+- **Policy flag** — show only policy-kept (untranslated) tokens
+- **Token text** — substring search on the original token
+- **Translation text** — substring search on the preferred translation
+
+Clearing all filter criteria restores the full token table.
+
+---
+
+## Multi-word phrase matching
+
+Tokens that form a recognised multi-word phrase are tagged in the token table
+with `[phrase start]` / `[phrase end]` indicators. The phrase's preferred
+translation appears on the leading token row. Phrase boundaries are also
+reflected in the interlinear view and in JSON/Markdown export.
+
+---
+
+## Interlinear view
+
+**View > Interlinear** shows the current session as a row-per-token gloss
+table. Each row contains:
+
+- original token
+- normalised form
+- preferred translation (or phrase rendering for phrase-lead tokens)
+- phrase span metadata
+
+---
+
+## Session notes
+
+Click the **Notes** button (or **Edit > Notes**) to attach free-text
+annotations:
+
+- **Session note** — applies to the whole translation
+- **Token note** — attached to a specific normalised token
+- **Phrase note** — attached to a specific multi-word phrase span
+
+Notes are included in JSON and Markdown exports.
+
+---
+
+## Comparing sessions
+
+**Tools > Compare Sessions** diffs two sessions from history and displays:
+
+- tokens added in the newer session
+- tokens removed from the older session
+- tokens whose translation changed
+- tokens that went from unknown to matched (or vice versa)
+
+---
+
+## Settings
+
+**Edit > Preferences** (or `Settings.load()` in library code) exposes:
+
+- **cache path** — override the default `~/.cache/pali_translator/` location
+- **font size** — token table and inspector font size
+- **auto-refresh** — automatically refresh the lexicon on launch
+- **window geometry** — remembered automatically between sessions
+
+Settings are stored at `~/.config/pali_translator/settings.json`.
+
+---
+
+## Markdown export
+
+**File > Export Markdown** writes a `.md` file containing:
+
+- H1 title with the source passage
+- Source and translation as block-quote sections
+- Full token analysis as a Markdown table
+- Unknown tokens list
+- Phrase matches section (when phrases were matched)
+- Notes section (when notes are attached)
+- ISO timestamp footer
+
+The Markdown file renders cleanly on GitHub and in standard Markdown viewers.

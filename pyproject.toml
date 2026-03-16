@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pali-translator"
-version = "0.2.0"
+version = "0.3.0"
 description = "Lexicon-governed Pāli translator: desktop GUI, CLI, and Python library backed by the shiny-adventure term policy"
 readme = "README.md"
 license = "MIT"

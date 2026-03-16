@@ -14,6 +14,10 @@ Typical lifecycle
    ``match  = ctrl.lookup("dukkha")``
 4. Inspect the session for export:
    ``session = ctrl.current_session``
+5. Browse history:
+   ``sessions = ctrl.history.get_all()``
+6. Work with concordance, filter, notes, and comparison via the helper
+   methods documented below.
 """
 
 from __future__ import annotations
@@ -21,8 +25,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from ..lexicon import Lexicon
+from ..phrases import PhraseMatch, match_phrases
 from ..translator import (
     TermMatch,
     TranslationResult,
@@ -31,6 +37,11 @@ from ..translator import (
     lookup_term,
     translate_text,
 )
+from .compare import ComparisonSummary, compare_sessions
+from .concordance import ConcordanceEntry, build_concordance
+from .history import HistoryStore
+from .notes import NotesStore
+from .settings import AppSettings
 
 
 # ---------------------------------------------------------------------------
@@ -78,9 +89,73 @@ class TranslationSession:
     result: TranslationResult
     token_rows: list[TokenRow]
     lexicon_status: LexiconStatus
+    phrase_matches: list[PhraseMatch] = field(default_factory=list)
     timestamp: str = field(
         default_factory=lambda: datetime.now().isoformat(timespec="seconds")
     )
+
+
+# ---------------------------------------------------------------------------
+# Filter helpers (pure functions — testable without a Controller instance)
+# ---------------------------------------------------------------------------
+
+FilterMode = Literal["all", "unknown", "matched", "policy"]
+
+
+def filter_tokens(
+    rows: list[TokenRow],
+    text: str = "",
+    mode: FilterMode = "all",
+) -> list[TokenRow]:
+    """Return the subset of *rows* that satisfies *text* and *mode* filters.
+
+    Parameters
+    ----------
+    rows:
+        Full list of token rows from a session.
+    text:
+        Free-text substring filter applied to the token, normalized form,
+        preferred translation, and definition fields (case-insensitive).
+        An empty string disables text filtering.
+    mode:
+        Category filter:
+
+        ``"all"``
+            No category filter — return everything (after text filter).
+        ``"unknown"``
+            Only rows where ``matched`` is ``False``.
+        ``"matched"``
+            Only rows where ``matched`` is ``True``.
+        ``"policy"``
+            Only rows where ``untranslated_preferred`` is ``True``.
+
+    Returns
+    -------
+    list[TokenRow]
+        Filtered rows, preserving original order.
+    """
+    result: list[TokenRow] = rows
+
+    if mode == "unknown":
+        result = [r for r in result if not r.matched]
+    elif mode == "matched":
+        result = [r for r in result if r.matched]
+    elif mode == "policy":
+        result = [r for r in result if r.untranslated_preferred]
+
+    if text:
+        needle = text.lower()
+        result = [
+            r for r in result
+            if (
+                needle in r.token.lower()
+                or needle in r.normalized.lower()
+                or needle in r.preferred_translation.lower()
+                or needle in r.definition.lower()
+            )
+        ]
+
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -98,6 +173,13 @@ class Controller:
         self._lexicon: Lexicon | None = None
         self._status = LexiconStatus()
         self._session: TranslationSession | None = None
+
+        # Sprint 3/4 state
+        self._settings: AppSettings = AppSettings.load()
+        self._history: HistoryStore = HistoryStore(
+            maxlen=self._settings.history_size
+        )
+        self._notes: NotesStore = NotesStore()
 
     # ------------------------------------------------------------------
     # Properties
@@ -117,6 +199,21 @@ class Controller:
     def current_session(self) -> TranslationSession | None:
         """Return the most recent translation session, or ``None``."""
         return self._session
+
+    @property
+    def settings(self) -> AppSettings:
+        """Return the current application settings."""
+        return self._settings
+
+    @property
+    def history(self) -> HistoryStore:
+        """Return the passage history store."""
+        return self._history
+
+    @property
+    def notes(self) -> NotesStore:
+        """Return the notes store for the current session."""
+        return self._notes
 
     # ------------------------------------------------------------------
     # Lexicon management
@@ -168,6 +265,9 @@ class Controller:
     def translate(self, text: str) -> TranslationResult:
         """Translate *text*, record the session, and return the result.
 
+        The new session is pushed to the history store and the notes store
+        is reset so it is ready for fresh annotations.
+
         Raises
         ------
         RuntimeError
@@ -179,13 +279,27 @@ class Controller:
             )
         result = translate_text(text, self._lexicon)
         rows = self._build_token_rows(text)
+        tokens = _tokenize(text)
+        phrases = match_phrases(tokens, self._lexicon)
         self._session = TranslationSession(
             source_text=text,
             result=result,
             token_rows=rows,
             lexicon_status=self._status,
+            phrase_matches=phrases,
         )
+        self._history.add(self._session)
+        self._notes.clear_all()
         return result
+
+    def restore_session(self, session: TranslationSession) -> None:
+        """Restore a past session as the current session.
+
+        This does **not** re-translate — the session object is used as-is.
+        Notes are *not* cleared, so any current annotations survive; the
+        caller is responsible for managing that if needed.
+        """
+        self._session = session
 
     def lookup(self, term: str) -> TermMatch | None:
         """Look up a single Pāli term in the lexicon.
@@ -198,6 +312,69 @@ class Controller:
         if self._lexicon is None:
             raise RuntimeError("Lexicon is not loaded yet.")
         return lookup_term(term, self._lexicon)
+
+    # ------------------------------------------------------------------
+    # Concordance
+    # ------------------------------------------------------------------
+
+    def build_concordance(
+        self,
+        sort_mode: str | None = None,
+    ) -> list[ConcordanceEntry]:
+        """Build a concordance from the current session's token rows.
+
+        Parameters
+        ----------
+        sort_mode:
+            One of ``"frequency"``, ``"alpha"``, ``"appearance"``.
+            Defaults to the value in :attr:`settings`.
+
+        Returns
+        -------
+        list[ConcordanceEntry]
+            Empty list when there is no current session.
+        """
+        if self._session is None:
+            return []
+        mode = sort_mode or self._settings.concordance_sort
+        return build_concordance(self._session.token_rows, sort_mode=mode)
+
+    # ------------------------------------------------------------------
+    # Filtering
+    # ------------------------------------------------------------------
+
+    def filter_session_tokens(
+        self,
+        text: str = "",
+        mode: FilterMode = "all",
+    ) -> list[TokenRow]:
+        """Filter the current session's token rows.
+
+        Returns an empty list when there is no current session.
+        """
+        if self._session is None:
+            return []
+        return filter_tokens(self._session.token_rows, text=text, mode=mode)
+
+    # ------------------------------------------------------------------
+    # Comparison
+    # ------------------------------------------------------------------
+
+    def compare(
+        self,
+        session_a: TranslationSession,
+        session_b: TranslationSession,
+    ) -> ComparisonSummary:
+        """Compare two sessions and return a structured diff."""
+        return compare_sessions(session_a, session_b)
+
+    # ------------------------------------------------------------------
+    # Settings persistence
+    # ------------------------------------------------------------------
+
+    def save_settings(self) -> None:
+        """Persist current settings to disk."""
+        self._settings.save()
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -221,7 +398,7 @@ class Controller:
                 rows.append(
                     TokenRow(
                         token=token,
-                        normalized=normalized,
+                            normalized=normalized,
                         matched=True,
                         preferred_translation=match.preferred_translation,
                         entry_type=match.entry_type,
