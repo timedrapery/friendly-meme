@@ -37,7 +37,7 @@ GitHub (shiny-adventure repo)
   translate_text(text, lexicon)  →  TranslationResult
         │
         ▼
-  cli.py  →  formatted stdout output
+      cli.py  →  stdout payloads + stderr progress/errors
 ```
 
 ---
@@ -57,8 +57,11 @@ Responsible for all data access:
 3. **Cache** — writes the assembled index to
    `~/.cache/pali_translator/lexicon.json` so subsequent runs are
    instant and offline-capable.
+      Invalid or empty caches are rejected explicitly rather than being used
+      silently.
 4. **Expose** — the `Lexicon` class provides `lookup(term)`,
-   `__len__`, `__contains__`, and a `from_dict` class method for
+      `__len__`, `__contains__`, `info()`, cache metadata properties, and a
+      `from_dict` class method for
    dependency injection in tests.
 
 ### `translator.py`
@@ -76,8 +79,9 @@ through unchanged but still appear in `TranslationResult.matches`.
 ### `cli.py`
 
 Thin wrapper around the library functions.  Handles argument parsing
-(`argparse`), lexicon loading progress messages, and human-readable
-output formatting.  Returns integer exit codes for shell scripting.
+(`argparse`), lexicon loading progress messages on stderr, human-readable
+output formatting, and JSON payload output for scripting. Returns integer exit
+codes for shell scripting.
 
 ---
 
@@ -117,13 +121,23 @@ Records are indexed by both `normalized_term` (the field value from the
 source JSON) and the normalised form of the display `term` field, so
 diacritic variants resolve to the same record.
 
+When a cache write fails after a successful download, the lexicon still remains
+usable for the current process and the instance records a cache warning for the
+caller to surface.
+
 ---
 
 ## Testing approach
 
-All tests live in `tests/test_translator.py` and use `unittest`.
-A small synthetic lexicon (`Lexicon.from_dict(...)`) replaces network
-access entirely, so the suite runs offline with no credentials needed.
+Tests use `unittest` and are split by concern:
+
+- `tests/test_translator.py` for lookup and translation semantics
+- `tests/test_lexicon.py` for cache handling and fetch failures
+- `tests/test_cli.py` for CLI smoke coverage and JSON output
+
+A small synthetic lexicon replaces network access in the main suite, while
+cache/fetch tests use mocks and temporary directories to keep behavior explicit
+and offline-friendly.
 
 See [development-guide.md](development-guide.md) for how to run the
 tests.

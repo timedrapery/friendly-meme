@@ -29,6 +29,13 @@ All tests are offline — no GitHub token or network access needed.
 python -m unittest discover -s tests -v
 ```
 
+Builds should also succeed before release-oriented changes:
+
+```bash
+python -m pip install "setuptools>=68" build
+python -m build
+```
+
 ---
 
 ## Submitting changes
@@ -77,7 +84,7 @@ and caches them at `~/.cache/pali_translator/lexicon.json`.
 To force a fresh download:
 
 ```bash
-python -m pali_translator --refresh dukkha
+pali-translator --refresh dukkha
 ```
 
 If you hit the GitHub unauthenticated rate limit (60 requests/hour), set a
@@ -85,7 +92,7 @@ personal access token:
 
 ```bash
 export GITHUB_TOKEN=ghp_...
-python -m pali_translator --refresh dukkha
+pali-translator --refresh dukkha
 ```
 
 ---

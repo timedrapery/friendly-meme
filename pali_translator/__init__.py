@@ -24,7 +24,14 @@ Typical usage::
     print(result.translated)                     # "dissatisfaction unbinding"
 """
 
+from importlib.metadata import PackageNotFoundError, version
+
 from .lexicon import Lexicon
 from .translator import lookup_term, translate_text
 
-__all__ = ["Lexicon", "lookup_term", "translate_text"]
+try:
+    __version__ = version("pali-translator")
+except PackageNotFoundError:
+    __version__ = "0+unknown"
+
+__all__ = ["Lexicon", "lookup_term", "translate_text", "__version__"]

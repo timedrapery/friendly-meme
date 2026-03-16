@@ -25,6 +25,12 @@ source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
+Check the installed CLI:
+
+```bash
+pali-translator --help
+```
+
 ---
 
 ## Running tests
@@ -33,6 +39,13 @@ The test suite is entirely offline — no network access or GitHub token needed.
 
 ```bash
 python -m unittest discover -s tests -v
+```
+
+Build the distribution artifacts before release work:
+
+```bash
+python -m pip install "setuptools>=68" build
+python -m build
 ```
 
 All tests should pass.  Tests use a small synthetic lexicon injected via
@@ -75,7 +88,7 @@ friendly-meme/
 - **Type annotations** on all public functions and methods.
 - **Docstrings** on every module, class, and public function.
 - **Tests** in `tests/` using `unittest`.  Keep the synthetic lexicon in
-  `test_translator.py` small and representative.
+  `tests/support.py` small and representative.
 
 ---
 
@@ -88,7 +101,7 @@ repository.  To add or revise a term, contribute there.
 To pull the latest data into your local cache:
 
 ```bash
-python -m pali_translator --refresh dukkha
+pali-translator --refresh dukkha
 ```
 
 ---
@@ -96,10 +109,17 @@ python -m pali_translator --refresh dukkha
 ## Releasing
 
 1. Update `version` in `pyproject.toml`.
-2. Add a dated entry in `CHANGELOG.md` under a new `[x.y.z]` heading.
-3. Commit, tag, and push:
+2. Move the relevant notes from `[Unreleased]` to a new dated release section in `CHANGELOG.md`.
+3. Run the test suite and build artifacts locally.
+4. Commit, tag, and push:
 
 ```bash
+python -m unittest discover -s tests -v
+python -m build
 git tag v0.2.0
 git push origin main --tags
 ```
+
+5. Publish a GitHub release. The release workflow scaffold in `.github/workflows/release.yml`
+  builds the package and can publish to PyPI when GitHub OIDC trusted
+  publishing is configured for the repository.

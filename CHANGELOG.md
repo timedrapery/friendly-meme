@@ -9,6 +9,36 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `pali-translator --json` for machine-readable single-term and passage output.
+- `pali-translator --info` for explicit lexicon/cache status inspection, with
+  optional JSON output.
+- `pali-translator --cache-path PATH` and `Lexicon(cache_path=...)` examples for
+  explicit local cache placement.
+- `Lexicon.info()`, `Lexicon.cache_path`, `Lexicon.loaded_from_cache`, and
+  `Lexicon.cache_warning` for lightweight load-state inspection.
+- CLI smoke tests and cache/error-path tests split into focused test modules.
+- Release workflow scaffolding for build artifacts and PyPI publication via
+  trusted publishing.
+
+### Changed
+
+- Tightened package metadata and exposed `pali_translator.__version__`.
+- Reworked CLI help text and examples around the installed `pali-translator`
+  command.
+- CLI progress and load diagnostics now go to stderr; result payloads remain on
+  stdout.
+- README and docs now state project boundaries, cache semantics, and fallback
+  behavior more explicitly.
+
+### Fixed
+
+- Broken or empty lexicon caches now fail explicitly instead of being used
+  silently.
+- Empty upstream lexicon downloads now raise a clear runtime error.
+- Cache write failures no longer discard an otherwise usable in-memory lexicon.
+
 ---
 
 ## [0.1.0] — 2026-03-15

@@ -5,19 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pali-translator"
 version = "0.1.0"
-description = "Pāli-to-contemporary-English translator backed by the shiny-adventure lexicon"
+description = "Lexicon-governed Pāli translation package and CLI backed by the shiny-adventure term policy"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
 requires-python = ">=3.10"
 # No third-party runtime dependencies — stdlib only.
 dependencies = []
-keywords = ["pali", "buddhism", "translation", "linguistics", "natural-language-processing"]
+keywords = ["pali", "translation", "lexicon", "cli", "philology"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "Intended Audience :: Education",
   "Intended Audience :: Religion",
-  "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
@@ -28,6 +27,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Text Processing :: Linguistic",
   "Topic :: Utilities",
+  "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
@@ -43,8 +43,13 @@ pali-translator = "pali_translator.cli:main"
 "Homepage"    = "https://github.com/timedrapery/friendly-meme"
 "Bug Tracker" = "https://github.com/timedrapery/friendly-meme/issues"
 "Data Source" = "https://github.com/timedrapery/shiny-adventure"
+"Documentation" = "https://github.com/timedrapery/friendly-meme/blob/main/docs/usage.md"
+"Changelog" = "https://github.com/timedrapery/friendly-meme/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 # Auto-discover the pali_translator package; exclude tests from the wheel.
 where   = ["."]
 exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+pali_translator = ["py.typed"]

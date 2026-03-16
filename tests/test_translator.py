@@ -1,4 +1,4 @@
-"""Tests for the Pali-to-contemporary-English translator."""
+"""Tests for translator-facing behavior and normalization consistency."""
 
 from __future__ import annotations
 
@@ -7,104 +7,9 @@ import unittest
 from pali_translator.lexicon import Lexicon, _normalize as lex_normalize
 from pali_translator.translator import lookup_term, translate_text, _normalize as tr_normalize
 
+from tests.support import SAMPLE_RECORDS
 
-# ---------------------------------------------------------------------------
-# Minimal synthetic lexicon used across all tests (no network access needed)
-# ---------------------------------------------------------------------------
-
-_SAMPLE_RECORDS = {
-    "dukkha": {
-        "term": "dukkha",
-        "normalized_term": "dukkha",
-        "entry_type": "major",
-        "part_of_speech": "noun",
-        "preferred_translation": "dissatisfaction",
-        "alternative_translations": ["unsatisfactoriness", "stress"],
-        "discouraged_translations": ["suffering"],
-        "definition": "The unstable and unsatisfactory character of conditioned experience.",
-        "untranslated_preferred": False,
-        "status": "stable",
-    },
-    "nibbana": {
-        "term": "nibbāna",
-        "normalized_term": "nibbana",
-        "entry_type": "major",
-        "part_of_speech": "noun",
-        "preferred_translation": "unbinding",
-        "alternative_translations": ["liberation"],
-        "discouraged_translations": ["nirvana"],
-        "definition": "The cessation of clinging and the fires of passion.",
-        "untranslated_preferred": False,
-        "status": "stable",
-    },
-    "dhamma": {
-        "term": "dhamma",
-        "normalized_term": "dhamma",
-        "entry_type": "major",
-        "part_of_speech": "noun",
-        "preferred_translation": "dhamma",
-        "alternative_translations": [],
-        "definition": "The teaching; the nature of things.",
-        "untranslated_preferred": True,
-        "status": "stable",
-    },
-    "ajiva": {
-        "term": "ajiva",
-        "normalized_term": "ajiva",
-        "entry_type": "minor",
-        "part_of_speech": "noun",
-        "preferred_translation": "livelihood",
-        "definition": "A speech, path, or conduct term used in ethical and practical analysis.",
-        "untranslated_preferred": False,
-        "status": "reviewed",
-    },
-}
-
-LEXICON = Lexicon.from_dict(_SAMPLE_RECORDS)
-
-
-class TestNormalize(unittest.TestCase):
-    def test_ascii_term(self):
-        self.assertEqual(lex_normalize("dukkha"), "dukkha")
-
-    def test_diacritics_stripped(self):
-        self.assertEqual(lex_normalize("nibbāna"), "nibbana")
-
-    def test_case_insensitive(self):
-        self.assertEqual(lex_normalize("Dukkha"), "dukkha")
-
-    def test_spaces_converted(self):
-        self.assertEqual(lex_normalize("noble truth"), "noble_truth")
-
-    def test_hyphens_converted(self):
-        self.assertEqual(lex_normalize("non-ill-will"), "non_ill_will")
-
-
-class TestLexiconLookup(unittest.TestCase):
-    def test_lookup_known_term(self):
-        record = LEXICON.lookup("dukkha")
-        self.assertIsNotNone(record)
-        self.assertEqual(record["preferred_translation"], "dissatisfaction")
-
-    def test_lookup_diacritic_variant(self):
-        record = LEXICON.lookup("nibbāna")
-        # The sample index key is 'nibbana'; diacritics should be stripped on lookup
-        self.assertIsNotNone(record)
-        self.assertEqual(record["preferred_translation"], "unbinding")
-
-    def test_lookup_case_insensitive(self):
-        record = LEXICON.lookup("Dukkha")
-        self.assertIsNotNone(record)
-
-    def test_lookup_unknown_returns_none(self):
-        self.assertIsNone(LEXICON.lookup("zzunknown"))
-
-    def test_len(self):
-        self.assertEqual(len(LEXICON), len(_SAMPLE_RECORDS))
-
-    def test_contains(self):
-        self.assertIn("dukkha", LEXICON)
-        self.assertNotIn("zzunknown", LEXICON)
+LEXICON = Lexicon.from_dict(SAMPLE_RECORDS)
 
 
 class TestLookupTerm(unittest.TestCase):
@@ -174,6 +79,29 @@ class TestTranslateText(unittest.TestCase):
         self.assertEqual(result.translated, "")
         self.assertEqual(result.matches, [])
         self.assertEqual(result.unknown_tokens, [])
+
+    def test_only_punctuation_is_preserved_and_not_marked_unknown(self):
+        result = translate_text("dukkha --- nibbana", LEXICON)
+        self.assertEqual(result.translated, "dissatisfaction --- unbinding")
+        self.assertEqual(result.unknown_tokens, [])
+
+    def test_unknown_tokens_preserve_order(self):
+        result = translate_text("zzone dukkha zztwo", LEXICON)
+        self.assertEqual(result.unknown_tokens, ["zzone", "zztwo"])
+
+    def test_missing_record_fields_fall_back_cleanly(self):
+        sparse = Lexicon.from_dict({
+            "sati": {
+                "term": "sati",
+                "normalized_term": "sati",
+            }
+        })
+        match = lookup_term("sati", sparse)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.preferred_translation, "sati")
+        self.assertEqual(match.alternative_translations, [])
+        self.assertEqual(match.definition, "")
+        self.assertEqual(match.entry_type, "")
 
 
 class TestNormalizeConsistency(unittest.TestCase):

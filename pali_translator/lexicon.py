@@ -101,7 +101,11 @@ def _fetch_json(url: str) -> Any:
                 "rate limit. Set the GITHUB_TOKEN environment variable to a "
                 "personal access token to increase the limit."
             ) from exc
-        raise
+        raise RuntimeError(
+            f"GitHub request failed with HTTP {exc.code} while fetching {url}."
+        ) from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Failed to fetch {url}: {exc.reason}") from exc
 
 
 def _normalize(term: str) -> str:
@@ -148,6 +152,8 @@ def _fetch_lexicon_from_github() -> dict[str, dict]:
         Mapping from normalised key → raw record dict.
     """
     tree_data = _fetch_json(_GITHUB_TREE_URL)
+    if not isinstance(tree_data, dict):
+        raise RuntimeError("GitHub tree response was not a JSON object.")
 
     # Collect paths for all term JSON files; skip directories and other blobs.
     term_paths = [
@@ -157,6 +163,11 @@ def _fetch_lexicon_from_github() -> dict[str, dict]:
         and entry["path"].endswith(".json")
         and entry.get("type") == "blob"
     ]
+    if not term_paths:
+        raise RuntimeError(
+            "No term records were found in the upstream repository tree. "
+            "The upstream layout may have changed."
+        )
 
     lexicon: dict[str, dict] = {}
     for path in term_paths:
@@ -168,6 +179,9 @@ def _fetch_lexicon_from_github() -> dict[str, dict]:
         except (urllib.error.URLError, json.JSONDecodeError):
             # Skip individual files that fail — a partial lexicon is still
             # useful and avoids aborting a large download on transient errors.
+            continue
+
+        if not isinstance(record, dict):
             continue
 
         # Primary key: use the explicit normalized_term field when present;
@@ -223,6 +237,8 @@ class Lexicon:
     def __init__(self, cache_path: Path | None = None, refresh: bool = False) -> None:
         self._cache_path = Path(cache_path) if cache_path else DEFAULT_CACHE_PATH
         self._index: dict[str, dict] = {}
+        self._loaded_from_cache = False
+        self._cache_warning: str | None = None
         self._load(refresh=refresh)
 
     # ------------------------------------------------------------------
@@ -246,6 +262,30 @@ class Lexicon:
         """Support ``term in lexicon`` membership tests."""
         return _normalize(term) in self._index
 
+    @property
+    def cache_path(self) -> Path:
+        """Return the cache file path used by this lexicon instance."""
+        return self._cache_path
+
+    @property
+    def loaded_from_cache(self) -> bool:
+        """Return ``True`` when the current index came from the on-disk cache."""
+        return self._loaded_from_cache
+
+    @property
+    def cache_warning(self) -> str | None:
+        """Return any non-fatal cache warning recorded during load."""
+        return self._cache_warning
+
+    def info(self) -> dict[str, str | int | bool]:
+        """Return lightweight metadata about the loaded lexicon instance."""
+        return {
+            "entries": len(self._index),
+            "cache_path": str(self._cache_path),
+            "loaded_from_cache": self._loaded_from_cache,
+            "cache_exists": self._cache_path.exists(),
+        }
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -254,15 +294,41 @@ class Lexicon:
         """Populate ``self._index`` from cache or GitHub."""
         if not refresh and self._cache_path.exists():
             # Fast path: read the pre-built index from disk.
-            with self._cache_path.open(encoding="utf-8") as fh:
-                self._index = json.load(fh)
+            try:
+                with self._cache_path.open(encoding="utf-8") as fh:
+                    self._index = json.load(fh)
+            except (OSError, json.JSONDecodeError) as exc:
+                raise RuntimeError(
+                    f"Failed to read lexicon cache at {self._cache_path}. "
+                    "Run again with refresh=True or remove the broken cache file."
+                ) from exc
+
+            if not isinstance(self._index, dict) or not self._index:
+                raise RuntimeError(
+                    f"Lexicon cache at {self._cache_path} is empty or invalid. "
+                    "Run again with refresh=True to rebuild it."
+                )
+
+            self._loaded_from_cache = True
             return
 
         # Slow path: download from GitHub and persist the result.
         self._index = _fetch_lexicon_from_github()
-        self._cache_path.parent.mkdir(parents=True, exist_ok=True)
-        with self._cache_path.open("w", encoding="utf-8") as fh:
-            json.dump(self._index, fh, ensure_ascii=False, indent=2)
+        if not self._index:
+            raise RuntimeError(
+                "The lexicon download completed but no term records were loaded. "
+                "Check your network connection or refresh later."
+            )
+
+        try:
+            self._cache_path.parent.mkdir(parents=True, exist_ok=True)
+            with self._cache_path.open("w", encoding="utf-8") as fh:
+                json.dump(self._index, fh, ensure_ascii=False, indent=2)
+        except OSError as exc:
+            self._cache_warning = (
+                f"Lexicon loaded, but the cache could not be written to "
+                f"{self._cache_path}: {exc}"
+            )
 
     @classmethod
     def from_dict(cls, data: dict[str, dict]) -> "Lexicon":
@@ -281,4 +347,6 @@ class Lexicon:
         instance = cls.__new__(cls)
         instance._cache_path = Path("/dev/null")  # never written
         instance._index = data
+        instance._loaded_from_cache = False
+        instance._cache_warning = None
         return instance
